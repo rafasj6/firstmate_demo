@@ -1,13 +1,17 @@
-import { BasicTokenInfo, TokenInfo } from "./constants";
+import { ethers } from "ethers";
+import { TokenInfo } from "./constants";
 
 import axios from 'axios'
+import { Execute, getClient } from "@reservoir0x/reservoir-sdk";
+import { error } from "console";
+
 
 export async function getTokenInfo( collectionId:string,tokenId:string): Promise<TokenInfo>{
     const [listingInfo, basicTokenInfo] = await Promise.all([
         getListingInfo(collectionId, tokenId),
         getBasicTokenInfo(collectionId, tokenId)
     ])
-    
+
     return {
         tokenId:tokenId,
         collectionId:collectionId,
@@ -63,6 +67,29 @@ async function getReservoirEndpointData(url:string, params:any){
         return error
     });
 }
+
+export async function purchaseToken(token:TokenInfo|undefined){
+    if(!(window as any).ethereum || !token) return null
+
+    await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+    const provider = new ethers.providers.Web3Provider((window as any).ethereum);
+
+    // Get the connected signer (account)
+    const signer = provider.getSigner();
+
+    await getClient()?.actions.buyToken({
+        items: [{ 
+             token: `${token.collectionId}:${token?.tokenId}`,
+         }],
+        // options:
+        signer,
+        
+        onProgress: (steps: Execute['steps']) => {
+            console.log(steps)
+        }
+    })
+}
+
 // export async function createTokenSet(tokens:BasicTokenInfo[]){
 //     let data = JSON.stringify({tokens:tokens.map((tokenInfo)=>`${tokenInfo.collectionId}:${tokenInfo.tokenId}`)});
 //     let config = {

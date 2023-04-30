@@ -1,37 +1,31 @@
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import './App.css';
-import {  getTokenInfo } from './utils';
-import { INITAL_TOKEN_SET, TokenInfo } from './constants';
+import {  getTokenInfo } from './utils/utils';
+import { INITAL_TOKEN_SET, TokenInfo } from './utils/constants';
 import TokenCardGrid from './components/TokenCardGrid';
 import AddTokenRow from './components/AddTokenRow';
+import { TokensTrackingContext, TokensTrackingContextProvider,useTokensTrackingContext } from './utils/tokenProvider';
+import { createClient } from "@reservoir0x/reservoir-sdk"
 const axios = require('axios');
 
 function App() {
-  const [tokens, setTokens] = useState<TokenInfo[]>([])
+  createClient({
+    chains: [{
+      id: 1,
+      baseApiUrl: 'https://api.reservoir.tools',
+      default: true,
+      apiKey: process.env.REACT_APP_RESERVOIR_API_KEY
+    }],
+    source: "dev.reservoir.market"
+  });
 
-  useEffect(()=>{
-    async function load(){
-      const _tokens = await Promise.all(INITAL_TOKEN_SET.map((basicTokenInfo)=>
-      getTokenInfo(basicTokenInfo.collectionId,basicTokenInfo.tokenId)
-        ))
-      setTokens(_tokens)
-      
-    }
-    load()
-  },[])
+ return <div className='w-screen pb-[30rem] p-[5rem] bg-black'>
+    <TokensTrackingContextProvider>
+      <AddTokenRow />
+      <TokenCardGrid />
+    </TokensTrackingContextProvider>
 
-  const removeToken = (tokenInfo:TokenInfo) => {
-    const newArray = [...tokens];
-    const filteredArray = newArray.filter(token =>
-      token.collectionId !== tokenInfo.collectionId
-      && token.tokenId !== tokenInfo.tokenId
-    );
-    setTokens( filteredArray );
-  }
- return <div className='w-screen p-[10rem] bg-black'>
-    <AddTokenRow addToken={(newToken:TokenInfo)=> setTokens([newToken,...tokens])}/>
-    <TokenCardGrid deleteToken={(tokenToDelete:TokenInfo)=>removeToken(tokenToDelete)} tokens={tokens}/>
  </div>
 }
 

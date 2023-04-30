@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { TokenInfo } from "../utils/constants"
 import { getTokenInfo } from "../utils/utils";
 import { useTokensTrackingContext } from "../utils/tokenProvider";
 
